@@ -1,14 +1,15 @@
 server:
-  port: 8080
+  port: 80
 
 spring:
   application:
-    name: hawk-registry
+    name: hawk-gateway
 
 # 配置 Eureka Server 注册中心
 eureka:
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.cloud.client.ip-address}:${server.port}
   client:
-    register-with-eureka: false
-    fetch-registry: false
     service-url:
       defaultZone: http://localhost:8080/eureka/

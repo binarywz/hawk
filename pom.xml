@@ -12,6 +12,7 @@
         <module>hawk-registry</module>
         <module>hawk-gateway</module>
         <module>hawk-diner</module>
+        <module>hawk-common</module>
     </modules>
 
     <!-- 可以集中定义依赖资源的版本信息 -->

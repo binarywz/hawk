@@ -4,6 +4,17 @@ server:
 spring:
   application:
     name: hawk-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true # 开启配置注册中心进行路由功能
+          lower-case-service-id: true # 将服务名称转小写
+      routes:
+        - id: hawk-diner
+          uri: lb://hawk-diner
+          predicates:
+            - Path=/hello/**
 
 # 配置 Eureka Server 注册中心
 eureka:

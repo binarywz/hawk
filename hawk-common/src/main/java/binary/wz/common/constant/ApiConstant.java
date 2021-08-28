@@ -9,7 +9,7 @@ public class ApiConstant {
     // 成功
     public static final int SUCCESS_CODE = 1;
     // 成功提示信息
-    public static final String SUCCESS_MESSAGE = "Successful.";
+    public static final String SUCCESS_MESSAGE = "Success.";
     // 错误
     public static final int ERROR_CODE = 0;
     // 未登录

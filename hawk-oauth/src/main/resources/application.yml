@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: hawk-oauth # 应用名
+    name: hawk-oauth-server # 应用名
   # 数据库
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver

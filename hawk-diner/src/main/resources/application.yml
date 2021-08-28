@@ -4,6 +4,36 @@ server:
 spring:
   application:
     name: hawk-diner # 应用名
+  # 数据库
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: thor
+    password: Thorjd111@#~
+    url: jdbc:mysql://192.168.80.9:3306/hawk?serverTimezone=Asia/Shanghai&characterEncoding=utf8&useUnicode=true&useSSL=false
+  # Redis
+  redis:
+    port: 6379
+    host: 127.0.0.1
+    timeout: 3000
+    database: 1
+  #    password: 123456
+  # swagger
+  swagger:
+    base-package: binary.wz.diner
+    title: HAWK DINER接口文档
+
+# Oauth2 客户端信息
+oauth2:
+  client:
+    client-id: appId
+    secret: 123456
+    grant_type: password
+    scope: api
+
+# oauth2 服务地址
+service:
+  name:
+    hawk-oauth-server: http://hawk-oauth-server/
 
 # 配置 Eureka Server 注册中心
 eureka:

@@ -1,9 +1,11 @@
 package binary.wz.oauth.config;
 
+import binary.wz.common.model.domain.SignInIdentity;
 import binary.wz.oauth.service.UserService;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
@@ -12,6 +14,7 @@ import org.springframework.security.oauth2.config.annotation.web.configurers.Aut
 import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore;
 
 import javax.annotation.Resource;
+import java.util.LinkedHashMap;
 
 /**
  * @author binarywz
@@ -74,7 +77,17 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
     public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
         // 认证器
         endpoints.authenticationManager(authenticationManager)
-                .userDetailsService(userService)                // 具体登录的方法
-                .tokenStore(redisTokenStore);        // token存储的方式: Redis
+                .userDetailsService(userService)                  // 具体登录的方法
+                .tokenStore(redisTokenStore)                      // token存储的方式: Redis
+                .tokenEnhancer((accessToken, authentication) -> { // 令牌增强对象，增强返回的结果
+                    // 获取登录用户的信息，然后设置
+                    SignInIdentity signInIdentity = (SignInIdentity) authentication.getPrincipal();
+                    LinkedHashMap<String, Object> map = new LinkedHashMap<>();
+                    map.put("nickname", signInIdentity.getNickname());
+                    map.put("avatarUrl", signInIdentity.getAvatarUrl());
+                    DefaultOAuth2AccessToken token = (DefaultOAuth2AccessToken) accessToken;
+                    token.setAdditionalInformation(map);
+                    return token;
+                });
     }
 }

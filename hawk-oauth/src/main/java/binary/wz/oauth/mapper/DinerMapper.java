@@ -1,4 +1,4 @@
-package binary.wz.oauth.Mapper;
+package binary.wz.oauth.mapper;
 
 import binary.wz.common.model.pojo.Diner;
 import org.apache.ibatis.annotations.Param;

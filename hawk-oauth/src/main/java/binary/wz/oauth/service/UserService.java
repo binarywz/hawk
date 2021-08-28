@@ -1,8 +1,10 @@
 package binary.wz.oauth.service;
 
+import binary.wz.common.model.domain.SignInIdentity;
 import binary.wz.common.model.pojo.Diner;
 import binary.wz.common.util.AssertUtils;
-import binary.wz.oauth.Mapper.DinerMapper;
+import binary.wz.oauth.mapper.DinerMapper;
+import org.springframework.beans.BeanUtils;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -30,7 +32,10 @@ public class UserService implements UserDetailsService {
         if (diner == null) {
             throw new UsernameNotFoundException("用户不存在，请重新输入");
         }
-        return new User(username, diner.getPassword(),
-                AuthorityUtils.commaSeparatedStringToAuthorityList(diner.getRoles()));
+        // 初始化登录认证对象
+        SignInIdentity signInIdentity = new SignInIdentity();
+        // 拷贝属性
+        BeanUtils.copyProperties(diner, signInIdentity);
+        return signInIdentity;
     }
 }

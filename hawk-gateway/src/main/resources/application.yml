@@ -14,7 +14,24 @@ spring:
         - id: hawk-diner
           uri: lb://hawk-diner
           predicates:
-            - Path=/hello/**
+            - Path=/diner/**
+          filters:
+            - StripPrefix=1 # /diner/signin -> /signin
+
+        - id: hawk-oauth-server
+          uri: lb://hawk-oauth-server
+          predicates:
+            - Path=/auth/**
+          filters:
+            - StripPrefix=1
+
+# 自配置放行白名单
+secure:
+  ignore:
+    urls: # 配置白名单路径
+      - /actuator/**
+      - /auth/oauth/**
+      - /diner/signin
 
 # 配置 Eureka Server 注册中心
 eureka:

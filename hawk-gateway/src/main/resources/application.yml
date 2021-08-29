@@ -33,6 +33,8 @@ secure:
       - /auth/oauth/**
       - /diner/signin
       - /diner/verify-code/send
+      - /diner/checkPhone
+      - /diner/register
 
 # 配置 Eureka Server 注册中心
 eureka:

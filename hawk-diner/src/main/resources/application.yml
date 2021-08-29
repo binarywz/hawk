@@ -43,3 +43,8 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:8080/eureka/
+
+# Mybatis
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true # 开启驼峰映射

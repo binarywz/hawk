@@ -1,5 +1,6 @@
 package binary.wz.diner;
 
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -8,6 +9,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @date 2021/8/21 22:28
  * @description:
  */
+@MapperScan("binary.wz.diner.mapper")
 @SpringBootApplication
 public class DinerApplication {
 

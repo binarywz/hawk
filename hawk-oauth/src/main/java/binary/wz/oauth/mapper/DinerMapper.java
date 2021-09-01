@@ -13,7 +13,7 @@ public interface DinerMapper {
 
     // 根据用户名 or 手机号 or 邮箱查询用户信息
     @Select("select id, username, nickname, phone, email, " +
-            "password, avatar_url, roles, is_valid from t_diners where " +
+            "password, avatar_url, roles, is_valid from t_diner where " +
             "(username = #{account} or phone = #{account} or email = #{account})")
     Diner selectByAccountInfo(@Param("account") String account);
 

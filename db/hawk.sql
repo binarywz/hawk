@@ -367,8 +367,8 @@ INSERT INTO `t_dictionary` VALUES (414, 'Cuisine', 'Bakery & Pastries|面包烘�
 -- ----------------------------
 -- Table structure for t_diners
 -- ----------------------------
-DROP TABLE IF EXISTS `t_diners`;
-CREATE TABLE `t_diners`  (
+DROP TABLE IF EXISTS `t_diner`;
+CREATE TABLE `t_diner`  (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `username` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
   `nickname` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '昵称',
@@ -483,10 +483,10 @@ INSERT INTO `t_restaurant` VALUES (21, '609 Pho', '609 Pho', 31.237629, 121.4387
 INSERT INTO `t_restaurant` VALUES (22, '70s Restaurant', '70后饭吧', 31.2398228737211, 121.438096413353, '1217 Changde Lu, near Changshou Lu', '常德路1217号, 近长寿路', 'Putuo', '', '', '021 6040 2808', '', '', 'Chinese', '¥¥', 0, '', NULL, '2014-05-04 19:26:28', 1, 'restaurant/22/restaurant/160_160/14075670693130533.JPG', '', 7, 2, '', '', '2016-01-04 11:22:23', '2016-01-04 11:22:23', 21);
 
 -- ----------------------------
--- Table structure for t_seckill_vouchers
+-- Table structure for t_seckill_voucher
 -- ----------------------------
-DROP TABLE IF EXISTS `t_seckill_vouchers`;
-CREATE TABLE `t_seckill_vouchers`  (
+DROP TABLE IF EXISTS `t_seckill_voucher`;
+CREATE TABLE `t_seckill_voucher`  (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `fk_voucher_id` int(11) NULL DEFAULT NULL,
   `amount` int(11) NULL DEFAULT NULL,
@@ -499,7 +499,7 @@ CREATE TABLE `t_seckill_vouchers`  (
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
--- Records of t_seckill_vouchers
+-- Records of t_seckill_voucher
 -- ----------------------------
 
 -- ----------------------------

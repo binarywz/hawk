@@ -6,7 +6,7 @@ import binary.wz.common.model.dto.DinerDTO;
 import binary.wz.common.model.pojo.Diner;
 import binary.wz.common.util.AssertUtils;
 import binary.wz.common.util.ResultInfoUtil;
-import binary.wz.diner.config.OAuthClientConfiguration;
+import binary.wz.diner.config.OAuthClientConfig;
 import binary.wz.diner.mapper.DinerMapper;
 import binary.wz.diner.model.domain.OAuthDinerInfo;
 import binary.wz.diner.model.vo.LoginDinerInfo;
@@ -36,7 +36,7 @@ public class DinerService {
     @Value("${service.name.hawk-oauth-server}")
     private String oauthServerName;
     @Resource
-    private OAuthClientConfiguration oAuthClientConfiguration;
+    private OAuthClientConfig oAuthClientConfig;
     @Resource
     private DinerMapper dinerMapper;
     @Resource
@@ -101,11 +101,11 @@ public class DinerService {
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("username", account);
         body.add("password", password);
-        body.setAll(BeanUtil.beanToMap(oAuthClientConfiguration));
+        body.setAll(BeanUtil.beanToMap(oAuthClientConfig));
         HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
         // 设置 Authorization
-        restTemplate.getInterceptors().add(new BasicAuthenticationInterceptor(oAuthClientConfiguration.getClientId(),
-                oAuthClientConfiguration.getSecret()));
+        restTemplate.getInterceptors().add(new BasicAuthenticationInterceptor(oAuthClientConfig.getClientId(),
+                oAuthClientConfig.getSecret()));
         // 发送请求
         ResponseEntity<ResultInfo> result =
                 restTemplate.postForEntity(oauthServerName + "oauth/token", entity, ResultInfo.class);

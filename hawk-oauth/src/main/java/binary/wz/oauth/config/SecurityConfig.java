@@ -20,7 +20,7 @@ import javax.annotation.Resource;
  */
 @Configuration
 @EnableWebSecurity
-public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     // 注入 Redis 连接工厂
     @Resource

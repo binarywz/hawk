@@ -1,9 +1,9 @@
 server:
-  port: 8082 # 端口
+  port: 8083 # 端口
 
 spring:
   application:
-    name: hawk-oauth-server # 应用名
+    name: hawk-voucher # 应用名
   # 数据库
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -16,28 +16,11 @@ spring:
     host: 127.0.0.1
     timeout: 3000
     database: 1
-#    password: 123456
+  #    password: 123456
   # swagger
   swagger:
-    base-package: binary.wz.oauth
-    title: HAWK OAUTH接口文档
-
-# Oauth2
-client:
-  oauth:
-    client-id: appId # 客户端标识 ID
-    secret: 123456 # 客户端安全码
-    # 授权类型
-    grant_types:
-      - password
-      - refresh_token
-    # token 有效时间，单位秒
-    token-validity-time: 2592000 # 一个月时间
-    refresh-token-validity-time: 2592000
-    # 客户端访问范围
-    scopes:
-      - api
-      - all
+    base-package: binary.wz.voucher
+    title: HAWK VOUCHER接口文档
 
 # 配置 Eureka Server 注册中心
 eureka:
@@ -48,17 +31,13 @@ eureka:
     service-url:
       defaultZone: http://localhost:8080/eureka/
 
-# Mybatis
 mybatis:
   configuration:
     map-underscore-to-camel-case: true # 开启驼峰映射
 
-# 指标监控健康检查
-management:
-  endpoints:
-    web:
-      exposure:
-        include: "*" # 暴露的端点
+service:
+  name:
+    hawk-oauth-server: http://hawk-oauth-server/
 
 logging:
   pattern:

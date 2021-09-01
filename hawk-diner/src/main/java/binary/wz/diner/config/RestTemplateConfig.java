@@ -11,7 +11,7 @@ import org.springframework.web.client.RestTemplate;
  * @description: Rest配置类
  */
 @Configuration
-public class RestTemplateConfiguration {
+public class RestTemplateConfig {
 
     @LoadBalanced
     @Bean

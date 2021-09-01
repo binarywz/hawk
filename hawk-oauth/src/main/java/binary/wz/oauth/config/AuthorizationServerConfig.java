@@ -23,7 +23,7 @@ import java.util.LinkedHashMap;
  */
 @Configuration
 @EnableAuthorizationServer
-public class AuthorizationServerConfiguration extends AuthorizationServerConfigurerAdapter {
+public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdapter {
 
     // RedisTokenSore
     @Resource
@@ -36,7 +36,7 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
     private PasswordEncoder passwordEncoder;
     // 客户端配置类
     @Resource
-    private ClientOAuthDataConfiguration clientOAuthDataConfiguration;
+    private ClientOAuthDataConfig clientOAuthDataConfig;
     // 登录校验
     @Resource
     UserService userService;
@@ -59,12 +59,12 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
      */
     @Override
     public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
-        clients.inMemory().withClient(clientOAuthDataConfiguration.getClientId())                        // 客户端标识 ID
-                .secret(passwordEncoder.encode(clientOAuthDataConfiguration.getSecret()))                // 客户端安全码
-                .authorizedGrantTypes(clientOAuthDataConfiguration.getGrantTypes())                      // 授权类型
-                .accessTokenValiditySeconds(clientOAuthDataConfiguration.getTokenValidityTime())         // token 有效期
-                .refreshTokenValiditySeconds(clientOAuthDataConfiguration.getRefreshTokenValidityTime()) // 刷新 token 的有效期
-                .scopes(clientOAuthDataConfiguration.getScopes());                                       // 客户端访问范围
+        clients.inMemory().withClient(clientOAuthDataConfig.getClientId())                        // 客户端标识 ID
+                .secret(passwordEncoder.encode(clientOAuthDataConfig.getSecret()))                // 客户端安全码
+                .authorizedGrantTypes(clientOAuthDataConfig.getGrantTypes())                      // 授权类型
+                .accessTokenValiditySeconds(clientOAuthDataConfig.getTokenValidityTime())         // token 有效期
+                .refreshTokenValiditySeconds(clientOAuthDataConfig.getRefreshTokenValidityTime()) // 刷新 token 的有效期
+                .scopes(clientOAuthDataConfig.getScopes());                                       // 客户端访问范围
     }
 
     /**

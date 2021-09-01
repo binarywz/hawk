@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties(prefix = "client.oauth")
 @Data
-public class ClientOAuthDataConfiguration {
+public class ClientOAuthDataConfig {
 
     // 客户端标识 ID
     private String clientId;

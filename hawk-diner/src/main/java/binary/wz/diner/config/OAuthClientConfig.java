@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "oauth2.client")
 @Getter
 @Setter
-public class OAuthClientConfiguration {
+public class OAuthClientConfig {
 
     private String clientId;
     private String secret;

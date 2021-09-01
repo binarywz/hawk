@@ -25,6 +25,11 @@ spring:
           filters:
             - StripPrefix=1
 
+        - id: hawk-voucher
+          uri: lb://hawk-voucher
+          predicates:
+            - Path=/voucher/**
+
 # 自配置放行白名单
 secure:
   ignore:
@@ -35,6 +40,7 @@ secure:
       - /diner/verify-code/send
       - /diner/checkPhone
       - /diner/register
+      - /voucher/add
 
 # 配置 Eureka Server 注册中心
 eureka:

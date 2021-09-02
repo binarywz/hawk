@@ -15,15 +15,13 @@ spring:
           uri: lb://hawk-diner
           predicates:
             - Path=/diner/**
-          filters:
-            - StripPrefix=1 # /diner/signin -> /signin
 
         - id: hawk-oauth-server
           uri: lb://hawk-oauth-server
           predicates:
             - Path=/auth/**
           filters:
-            - StripPrefix=1
+            - StripPrefix=1 # /auth/oauth -> /oauth
 
         - id: hawk-voucher
           uri: lb://hawk-voucher

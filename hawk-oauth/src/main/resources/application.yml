@@ -60,6 +60,6 @@ management:
       exposure:
         include: "*" # 暴露的端点
 
-logging:
-  pattern:
-    console: '%d{HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n'
+#logging:
+#  pattern:
+#    console: '%d{HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n'

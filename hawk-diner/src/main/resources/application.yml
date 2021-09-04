@@ -48,3 +48,7 @@ eureka:
 mybatis:
   configuration:
     map-underscore-to-camel-case: true # 开启驼峰映射
+
+#logging:
+#  pattern:
+#    console: '%d{HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n'

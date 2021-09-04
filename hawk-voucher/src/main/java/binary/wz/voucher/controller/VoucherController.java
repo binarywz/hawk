@@ -15,7 +15,7 @@ import javax.servlet.http.HttpServletRequest;
  * @description: 秒杀控制层
  */
 @RestController
-@RequestMapping("voucher")
+@RequestMapping("/voucher")
 public class VoucherController {
 
     @Resource
@@ -29,7 +29,7 @@ public class VoucherController {
      * @param access_token
      * @return
      */
-    @PostMapping("{voucherId}")
+    @PostMapping("/{voucherId}")
     public ResultInfo<String> doSeckill(@PathVariable Integer voucherId, String access_token) {
         ResultInfo resultInfo = voucherService.doSeckill(voucherId, access_token, request.getServletPath());
         return resultInfo;
@@ -40,7 +40,7 @@ public class VoucherController {
      * @param seckillVoucher
      * @return
      */
-    @PostMapping("add")
+    @PostMapping("/add")
     public ResultInfo<String> addSeckillVouchers(@RequestBody SeckillVoucher seckillVoucher) {
         voucherService.addSeckillVoucher(seckillVoucher);
         return ResultInfoUtil.buildSuccess(request.getServletPath(),

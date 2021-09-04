@@ -49,7 +49,6 @@ public class VoucherService {
         AssertUtils.isTrue(voucherId == null || voucherId < 0, "请选择需要抢购的代金券");
         AssertUtils.isNotEmpty(accessToken, "请登录");
 
-        // 注释原始的 关系型数据库 的流程
         // 判断此代金券是否加入抢购
         SeckillVoucher seckillVouchers = seckillVoucherMapper.selectVoucher(voucherId);
         AssertUtils.isTrue(seckillVouchers == null, "该代金券并未有抢购活动");
@@ -76,7 +75,6 @@ public class VoucherService {
                 seckillVouchers.getFkVoucherId());
         AssertUtils.isTrue(order != null, "该用户已抢到该代金券，无需再抢");
 
-        // 注释原始的 关系型数据库 的流程
         // 扣库存
         int count = seckillVoucherMapper.stockDecrease(seckillVouchers.getId());
         AssertUtils.isTrue(count == 0, "该券已经卖完了");

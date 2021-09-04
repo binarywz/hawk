@@ -10,7 +10,7 @@ import lombok.Getter;
 @Getter
 public enum RedisKeyConstant {
     VERIFY_CODE("VERIFY_CODE:", "验证码"),
-    SECKKILL_VOUCHERS("SECKKILL_VOUCHERS:", "秒杀券的key"),
+    SECKILL_VOUCHER("SECKILL_VOUCHER:", "秒杀券的key"),
     LOCK_KEY("LOCK_KEY:", "分布式锁的key");
 
     private String key;

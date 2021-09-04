@@ -1,6 +1,7 @@
 package binary.wz.voucher.service;
 
 import binary.wz.common.constant.ApiConstant;
+import binary.wz.common.constant.RedisKeyConstant;
 import binary.wz.common.model.domain.ResultInfo;
 import binary.wz.common.model.pojo.SeckillVoucher;
 import binary.wz.common.model.pojo.VoucherOrder;
@@ -12,6 +13,7 @@ import binary.wz.voucher.mapper.VoucherOrderMapper;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.IdUtil;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -19,6 +21,7 @@ import org.springframework.web.client.RestTemplate;
 import javax.annotation.Resource;
 import java.util.Date;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * @author binarywz
@@ -36,6 +39,8 @@ public class VoucherService {
     private String oauthServerName;
     @Resource
     private RestTemplate restTemplate;
+    @Resource
+    private RedisTemplate redisTemplate;
 
     /**
      * 抢购代金券
@@ -49,11 +54,11 @@ public class VoucherService {
         AssertUtils.isTrue(voucherId == null || voucherId < 0, "请选择需要抢购的代金券");
         AssertUtils.isNotEmpty(accessToken, "请登录");
 
-        // 判断此代金券是否加入抢购
-        SeckillVoucher seckillVoucher = seckillVoucherMapper.selectVoucher(voucherId);
-        AssertUtils.isTrue(seckillVoucher == null, "该代金券并未有抢购活动");
-        // 判断是否有效
-        AssertUtils.isTrue(seckillVoucher.getIsValid() == 0, "该活动已结束");
+        // 采用redis
+        String key = RedisKeyConstant.SECKILL_VOUCHER.getKey() + voucherId;
+        Map<String, Object> map = redisTemplate.opsForHash().entries(key);
+        SeckillVoucher seckillVoucher = BeanUtil.mapToBean(map, SeckillVoucher.class, true, null);
+
         // 判断是否开始、结束
         Date now = new Date();
         AssertUtils.isTrue(now.before(seckillVoucher.getStartTime()), "该抢购还未开始");
@@ -75,14 +80,14 @@ public class VoucherService {
                 seckillVoucher.getFkVoucherId());
         AssertUtils.isTrue(order != null, "该用户已抢到该代金券，无需再抢");
 
-        // 减库存
-        int count = seckillVoucherMapper.stockDecrease(seckillVoucher.getId());
-        AssertUtils.isTrue(count == 0, "系统错误！扣减库存失败！");
+        // redis减库存
+        long count = redisTemplate.opsForHash().increment(key, "amount", -1);
+        AssertUtils.isTrue(count < 0, "该券已经卖完了");
 
         // 下单
         VoucherOrder voucherOrder = new VoucherOrder();
         voucherOrder.setFkDinerId(dinerInfo.getId());
-        voucherOrder.setFkSeckillId(seckillVoucher.getId());
+        // voucherOrder.setFkSeckillId(seckillVoucher.getId()); // redis中不需要维护外键信息
         voucherOrder.setFkVoucherId(seckillVoucher.getFkVoucherId());
         String orderNo = IdUtil.getSnowflake(1, 1).nextIdStr();
         voucherOrder.setOrderNo(orderNo);
@@ -90,6 +95,8 @@ public class VoucherService {
         voucherOrder.setStatus(0);
         count = voucherOrderMapper.save(voucherOrder);
         AssertUtils.isTrue(count == 0, "用户抢购失败");
+
+        // TODO 库存持久化处理
 
         return ResultInfoUtil.buildSuccess(path, "抢购成功");
     }
@@ -111,11 +118,21 @@ public class VoucherService {
         AssertUtils.isTrue(now.after(seckillVoucher.getEndTime()), "结束时间不能早于当前时间");
         AssertUtils.isTrue(seckillVoucher.getStartTime().after(seckillVoucher.getEndTime()), "开始时间不能晚于结束时间");
 
-        // 验证数据库中是否已经存在该券的秒杀活动
-        SeckillVoucher seckillVouchersFromDb = seckillVoucherMapper.selectVoucher(seckillVoucher.getFkVoucherId());
-        AssertUtils.isTrue(seckillVouchersFromDb != null, "该券已经拥有了抢购活动");
-        // 插入数据库
-        seckillVoucherMapper.save(seckillVoucher);
+        // 采用redis实现
+        String key = RedisKeyConstant.SECKILL_VOUCHER.getKey() +
+                seckillVoucher.getFkVoucherId();
+        // 验证redis中是否已经存在该券的秒杀活动
+        // 为什么使用hash: 1.hash可以很方便地获取库存字段 2.hash在Redis中存储的时候不会进行序列化与反序列，可以提高性能
+        Map<String, Object> map = redisTemplate.opsForHash().entries(key);
+        AssertUtils.isTrue(!map.isEmpty() && (int)map.get("amount") > 0, "该券已经拥有了抢购活动");
+
+        // redis
+        seckillVoucher.setIsValid(1);
+        seckillVoucher.setCreateDate(now);
+        seckillVoucher.setUpdateDate(now);
+        redisTemplate.opsForHash().putAll(key, BeanUtil.beanToMap(seckillVoucher));
+
+        // TODO 持久化处理
     }
 
 }

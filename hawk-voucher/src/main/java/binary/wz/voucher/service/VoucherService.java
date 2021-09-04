@@ -13,15 +13,15 @@ import binary.wz.voucher.mapper.VoucherOrderMapper;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.IdUtil;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Resource;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author binarywz
@@ -41,6 +41,8 @@ public class VoucherService {
     private RestTemplate restTemplate;
     @Resource
     private RedisTemplate redisTemplate;
+    @Resource
+    private DefaultRedisScript defaultRedisScript;
 
     /**
      * 抢购代金券
@@ -80,10 +82,6 @@ public class VoucherService {
                 seckillVoucher.getFkVoucherId());
         AssertUtils.isTrue(order != null, "该用户已抢到该代金券，无需再抢");
 
-        // redis减库存
-        long count = redisTemplate.opsForHash().increment(key, "amount", -1);
-        AssertUtils.isTrue(count < 0, "该券已经卖完了");
-
         // 下单
         VoucherOrder voucherOrder = new VoucherOrder();
         voucherOrder.setFkDinerId(dinerInfo.getId());
@@ -93,8 +91,16 @@ public class VoucherService {
         voucherOrder.setOrderNo(orderNo);
         voucherOrder.setOrderType(1);
         voucherOrder.setStatus(0);
-        count = voucherOrderMapper.save(voucherOrder);
+        long count = voucherOrderMapper.save(voucherOrder);
         AssertUtils.isTrue(count == 0, "用户抢购失败");
+
+        // redis+lua减库存
+        // 下单后减库存可以保证数据库+redis两个层面的事务
+        List<String> keys = new ArrayList<>();
+        keys.add(key);
+        keys.add("amount");
+        Long amount = (Long) redisTemplate.execute(defaultRedisScript, keys);
+        AssertUtils.isTrue(amount == null || amount < 1, "该用户已抢到该代金券，无需再抢");
 
         // TODO 库存持久化处理
 

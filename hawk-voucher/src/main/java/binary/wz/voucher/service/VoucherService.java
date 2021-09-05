@@ -2,22 +2,26 @@ package binary.wz.voucher.service;
 
 import binary.wz.common.constant.ApiConstant;
 import binary.wz.common.constant.RedisKeyConstant;
+import binary.wz.common.exception.ParameterException;
 import binary.wz.common.model.domain.ResultInfo;
 import binary.wz.common.model.pojo.SeckillVoucher;
 import binary.wz.common.model.pojo.VoucherOrder;
 import binary.wz.common.model.vo.SignInDinerInfo;
 import binary.wz.common.util.AssertUtils;
 import binary.wz.common.util.ResultInfoUtil;
+import binary.wz.voucher.component.RedisLock;
 import binary.wz.voucher.mapper.SeckillVoucherMapper;
 import binary.wz.voucher.mapper.VoucherOrderMapper;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.IdUtil;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Resource;
@@ -43,6 +47,8 @@ public class VoucherService {
     private RedisTemplate redisTemplate;
     @Resource
     private DefaultRedisScript defaultRedisScript;
+    @Resource
+    private RedisLock redisLock;
 
     /**
      * 抢购代金券
@@ -77,32 +83,59 @@ public class VoucherService {
         // 这里的data是一个LinkedHashMap，SignInDinerInfo
         SignInDinerInfo dinerInfo = BeanUtil.fillBeanWithMap((LinkedHashMap) resultInfo.getData(),
                 new SignInDinerInfo(), false);
-        // 判断登录用户是否已抢到(一个用户针对这次活动只能买一次)
-        VoucherOrder order = voucherOrderMapper.findDinerOrder(dinerInfo.getId(),
-                seckillVoucher.getFkVoucherId());
-        AssertUtils.isTrue(order != null, "该用户已抢到该代金券，无需再抢");
 
-        // 下单
-        VoucherOrder voucherOrder = new VoucherOrder();
-        voucherOrder.setFkDinerId(dinerInfo.getId());
-        // voucherOrder.setFkSeckillId(seckillVoucher.getId()); // redis中不需要维护外键信息
-        voucherOrder.setFkVoucherId(seckillVoucher.getFkVoucherId());
-        String orderNo = IdUtil.getSnowflake(1, 1).nextIdStr();
-        voucherOrder.setOrderNo(orderNo);
-        voucherOrder.setOrderType(1);
-        voucherOrder.setStatus(0);
-        long count = voucherOrderMapper.save(voucherOrder);
-        AssertUtils.isTrue(count == 0, "用户抢购失败");
+        // 分布式锁保证同一活动一个账号限购一次
+        String lockName = RedisKeyConstant.LOCK_KEY.getKey() + dinerInfo.getId()
+                            + ":" + voucherId;
+        long expireTime = seckillVoucher.getEndTime().getTime() - now.getTime();
+        String lockKey = redisLock.tryLock(lockName, expireTime); // 锁失效时间，视频中通过失效时间限制一人一单
 
-        // redis+lua减库存
-        // 下单后减库存可以保证数据库+redis两个层面的事务
-        List<String> keys = new ArrayList<>();
-        keys.add(key);
-        keys.add("amount");
-        Long amount = (Long) redisTemplate.execute(defaultRedisScript, keys);
-        AssertUtils.isTrue(amount == null || amount < 1, "该用户已抢到该代金券，无需再抢");
+        // 如果没获取到锁表明已经有线程处于购买过程中
+        if (!StringUtils.isNotBlank(lockKey)) {
+            return ResultInfoUtil.buildSuccess(path, "抢购人数太多，请稍后再试！");
+        }
 
-        // TODO 库存持久化处理
+        try {
+            // 在获取到锁之后再判断用户是否抢过，不然存在释放锁之后其他用户重复下单的情况
+            // 判断登录用户是否已抢到(一个用户针对这次活动只能买一次)
+            VoucherOrder order = voucherOrderMapper.findDinerOrder(dinerInfo.getId(),
+                    seckillVoucher.getFkVoucherId());
+            if (order != null) {
+                return ResultInfoUtil.buildSuccess(path, "您已经抢到了优惠券！");
+            }
+
+            // redis+lua减库存，没有限购次数可以不使用分布式锁
+            List<String> keys = new ArrayList<>();
+            keys.add(key);
+            keys.add("amount");
+            Long amount = (Long) redisTemplate.execute(defaultRedisScript, keys);
+            AssertUtils.isTrue(amount == null || amount < 0, "优惠券已经抢光了！");
+
+            // 下单
+            VoucherOrder voucherOrder = new VoucherOrder();
+            voucherOrder.setFkDinerId(dinerInfo.getId());
+            // voucherOrder.setFkSeckillId(seckillVoucher.getId()); // TODO 需要在redis中添加秒杀活动id
+            voucherOrder.setFkVoucherId(seckillVoucher.getFkVoucherId());
+            String orderNo = IdUtil.getSnowflake(1, 1).nextIdStr();
+            voucherOrder.setOrderNo(orderNo);
+            voucherOrder.setOrderType(1);
+            voucherOrder.setStatus(0);
+            long count = voucherOrderMapper.save(voucherOrder);
+            AssertUtils.isTrue(count == 0, "用户抢购失败");
+
+            // TODO 库存持久化处理
+        } catch (Exception ex) {
+            // 手动回滚事务
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            // 解锁
+            redisLock.unlock(lockName, lockKey);
+            // TODO 发生异常时需要回滚redis库存
+            if (ex instanceof ParameterException) {
+                return ResultInfoUtil.buildError(0, "优惠券已经抢光了！", path);
+            }
+        } finally {
+            redisLock.unlock(lockName, lockKey);
+        }
 
         return ResultInfoUtil.buildSuccess(path, "抢购成功");
     }
@@ -132,13 +165,14 @@ public class VoucherService {
         Map<String, Object> map = redisTemplate.opsForHash().entries(key);
         AssertUtils.isTrue(!map.isEmpty() && (int)map.get("amount") > 0, "该券已经拥有了抢购活动");
 
+        // TODO 持久化处理
+        // 秒杀活动存入redis之前进行持久化可以获取秒杀活动的id，更容易维护
+
         // redis
         seckillVoucher.setIsValid(1);
         seckillVoucher.setCreateDate(now);
         seckillVoucher.setUpdateDate(now);
         redisTemplate.opsForHash().putAll(key, BeanUtil.beanToMap(seckillVoucher));
-
-        // TODO 持久化处理
     }
 
 }

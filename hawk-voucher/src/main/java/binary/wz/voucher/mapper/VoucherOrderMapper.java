@@ -12,7 +12,7 @@ import org.apache.ibatis.annotations.Select;
  */
 public interface VoucherOrderMapper {
 
-    // 根据食客 ID 和秒杀 ID 查询代金券订单
+    // 根据食客ID和优惠券ID查询代金券订单
     @Select("select id, order_no, fk_voucher_id, fk_diner_id, qrcode, payment," +
             " status, fk_seckill_id, order_type, create_date, update_date, " +
             " is_valid from t_voucher_order where fk_diner_id = #{dinerId} " +
@@ -25,6 +25,6 @@ public interface VoucherOrderMapper {
             " status, fk_seckill_id, order_type, create_date, update_date,  is_valid)" +
             " values (#{orderNo}, #{fkVoucherId}, #{fkDinerId}, #{status}, #{fkSeckillId}, " +
             " #{orderType}, now(), now(), 1)")
-    int save(VoucherOrder voucherOrders);
+    int save(VoucherOrder voucherOrder);
 
 }

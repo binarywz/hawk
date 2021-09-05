@@ -1,5 +1,3 @@
--- KEYS[1]-redis中的key
--- KEYS[2]-redis hash的key
 if (redis.call('hexists', KEYS[1], KEYS[2]) == 1) then
 	local stock = tonumber(redis.call('hget', KEYS[1], KEYS[2]));
 	if (stock > 0) then
